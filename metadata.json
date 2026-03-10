@@ -1,0 +1,5 @@
+{
+  "name": "IPT Interpersonal Therapy AI Counselor",
+  "description": "A high-fidelity structured counseling MVP based on Interpersonal Psychotherapy (IPT) principles, providing risk assessment, 8-step guidance, and communication coaching.",
+  "requestFramePermissions": []
+}
