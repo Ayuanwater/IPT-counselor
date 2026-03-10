@@ -17,15 +17,16 @@ async function startServer() {
     try {
       const { systemPrompt, userPrompt } = req.body;
       
-      const apiKey = process.env.DEEPSEEK_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY;
+      const apiKey = process.env.DEEPSEEK_API_KEY || process.env.API_KEY;
       
       if (!apiKey) {
-        return res.status(500).json({ error: "API Key not configured on server" });
+        return res.status(500).json({ error: "DEEPSEEK_API_KEY not configured on server" });
       }
 
       const client = new OpenAI({
         apiKey: apiKey,
         baseURL: "https://api.deepseek.com",
+        timeout: 20000, // 20 seconds timeout
       });
 
       const response = await client.chat.completions.create({
