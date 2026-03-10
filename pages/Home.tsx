@@ -34,7 +34,7 @@ const Home: React.FC<HomeProps> = ({ onStart }) => {
             className="flex flex-col h-full items-start p-8 bg-white border border-slate-200/50 rounded-[32px] shadow-[0_2px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] hover:border-indigo-200 transition-all duration-500 text-left group relative overflow-hidden"
           >
             <div className={`p-4 rounded-2xl mb-8 group-hover:scale-110 transition-transform duration-500 bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600`}>
-              {React.cloneElement(card.icon as React.ReactElement<any>, { size: 28 })}
+              {React.cloneElement(card.icon as React.ReactElement<object>, { size: 28 })}
             </div>
             <h3 className="font-bold text-slate-800 text-xl mb-3 tracking-tight">{card.title}</h3>
             <p className="text-sm text-slate-400 leading-relaxed font-light mb-8">{card.desc}</p>

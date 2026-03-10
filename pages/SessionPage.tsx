@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Session, Message, RiskLevel, AppView } from '../types';
 import { iptEngine } from '../lib/iptEngine';
 import { identifyRisk } from '../lib/risk';
-import { Send, CheckCircle, RotateCcw, MessageCircle, Activity, Layout as LayoutIcon, Command } from 'lucide-react';
+import { Send, CheckCircle, RotateCcw, Activity, Layout as LayoutIcon, Command } from 'lucide-react';
 
 interface SessionPageProps {
   session: Session;
@@ -28,7 +28,7 @@ const SessionPage: React.FC<SessionPageProps> = ({ session, updateSession, onSho
     }
   }, [session.messages, isTyping]);
 
-  const handleSend = async (text: string) => {
+  const handleSend = React.useCallback(async (text: string) => {
     if (!text.trim()) return;
 
     if (text === "查看话术建议" || text === "再给我些话术启发") { onNavigate('coach'); return; }
@@ -77,7 +77,7 @@ const SessionPage: React.FC<SessionPageProps> = ({ session, updateSession, onSho
       console.error("Session Error:", error);
       setIsTyping(false);
     }
-  };
+  }, [onNavigate, onRestart, onShowSafety, session, updateSession]);
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-white">
