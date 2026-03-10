@@ -1,6 +1,9 @@
 import OpenAI from "openai";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+// 允许 Vercel 函数运行更长时间（Hobby 计划最高 60 秒）
+export const maxDuration = 60;
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
