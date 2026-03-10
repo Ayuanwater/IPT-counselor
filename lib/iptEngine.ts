@@ -1,13 +1,5 @@
 
-import OpenAI from "openai";
 import { IPTFocus, Session } from '../types';
-
-// 使用环境变量中的 API_KEY 初始化 DeepSeek 客户端 (OpenAI 兼容)
-const client = new OpenAI({
-  apiKey: process.env.API_KEY || process.env.DEEPSEEK_API_KEY,
-  baseURL: "https://api.deepseek.com",
-  dangerouslyAllowBrowser: true // 在前端直接调用 API
-});
 
 const STEP_DATA = [
   { step: 1, name: '目标定义', goal: '明确我们今天要解决的核心关系问题。' },
@@ -26,7 +18,7 @@ export const iptEngine = {
   getStepInfo: (step: number) => STEP_DATA[Math.min(step - 1, 9)],
 
   /**
-   * 使用 DeepSeek Chat 生成回复。
+   * 使用服务器端代理调用 DeepSeek Chat 生成回复。
    * 强化了关于持续对话的系统指令，防止 AI 主动截断会话。
    */
   generateResponse: async (session: Session, userInput: string): Promise<{ response: string; chips?: string[]; updates?: Partial<Session> }> => {
@@ -57,17 +49,21 @@ export const iptEngine = {
     请以 JSON 格式输出回复。`;
 
     try {
-      const response = await client.chat.completions.create({
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        response_format: { type: 'json_object' }
+      // 调用服务器端 API
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ systemPrompt, userPrompt }),
       });
 
-      const content = response.choices[0].message.content || '{}';
-      const parsed = JSON.parse(content);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch from server");
+      }
+
+      const parsed = await response.json();
       
       // 处理第 8 步行动计划的默认生成
       if (step === 8 && userInput && !parsed.updates?.actionPlan) {
@@ -86,7 +82,7 @@ export const iptEngine = {
         updates: parsed.updates || {}
       };
     } catch (error) {
-      console.error("DeepSeek API Error:", error);
+      console.error("Chat API Error:", error);
       return { 
         response: "抱歉，我刚才正在深思如何更好地支持您。关于您刚才分享的，您觉得最让您触动的是哪一部分？", 
         chips: ["我当下的情绪", "我想改变的沟通方式", "我的核心需求"] 
