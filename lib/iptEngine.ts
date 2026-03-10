@@ -1,9 +1,13 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import OpenAI from "openai";
 import { IPTFocus, Session } from '../types';
 
-// 使用环境变量中的 API_KEY 初始化客户端
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// 使用环境变量中的 API_KEY 初始化 DeepSeek 客户端 (OpenAI 兼容)
+const client = new OpenAI({
+  apiKey: process.env.API_KEY || process.env.DEEPSEEK_API_KEY,
+  baseURL: "https://api.deepseek.com",
+  dangerouslyAllowBrowser: true // 在前端直接调用 API
+});
 
 const STEP_DATA = [
   { step: 1, name: '目标定义', goal: '明确我们今天要解决的核心关系问题。' },
@@ -22,76 +26,56 @@ export const iptEngine = {
   getStepInfo: (step: number) => STEP_DATA[Math.min(step - 1, 9)],
 
   /**
-   * 使用 Gemini 3 Flash 生成回复，显著提升响应速度。
-   * 同时强化了关于持续对话的系统指令，防止 AI 主动截断会话。
+   * 使用 DeepSeek Chat 生成回复。
+   * 强化了关于持续对话的系统指令，防止 AI 主动截断会话。
    */
   generateResponse: async (session: Session, userInput: string): Promise<{ response: string; chips?: string[]; updates?: Partial<Session> }> => {
     const { step, iptFocus } = session;
     const stepInfo = iptEngine.getStepInfo(step);
     
     // 构造针对 IPT 咨询的深度提示词
-    const prompt = `你是一位专业的 IPT（人际关系疗法）咨询师。
+    const systemPrompt = `你是一位专业的 IPT（人际关系疗法）咨询师。
     当前关注领域: ${getFocusName(iptFocus)}
     咨询阶段: 第 ${step} 步 (${stepInfo.name}) - 目标: ${stepInfo.goal}
     
-    对话历史摘要（包含用户之前识别的情绪和需求）:
+    【核心交互准则】：
+    1. **必须全程使用中文**。语气要温暖、专业、具有高度共情能力。
+    2. **绝对禁止主动结束对话**。即使完成了 8 步流程，也不要说“再见”。
+    3. 在总结阶段（Step 9+），请通过深入的开放式提问引导用户继续分享。
+    4. 始终围绕用户的核心需求（Needs）和情绪模式（Patterns）进行反馈。
+    5. **响应速度优化**：保持回复简洁而有力。
+    6. 从输入中智能提取更新：如果用户提到了新的感受或事件，请更新到 extracted 字段中。
+    7. 提供 3-4 个能够反映用户可能心态的“快捷回复选项”（chips）。
+    8. **最终输出必须是严格的 JSON 格式**，包含 response, chips, updates 字段。
+    `;
+
+    const userPrompt = `对话历史摘要:
     ${session.messages.slice(-10).map(m => `${m.role === 'ai' ? '咨询师' : '用户'}: ${m.content}`).join('\n')}
     
     用户最新输入: "${userInput}"
     
-    【核心交互准则】：
-    1. **必须全程使用中文**。语气要温暖、专业、具有高度共情能力，像一位冷静而慈悲的临床咨询师。
-    2. **绝对禁止主动结束对话**。即使完成了 8 步流程，也不要说“再见”或“祝你好运”。
-    3. 在总结阶段（Step 9+），请通过深入的开放式提问（如“这个发现对你来说意味着什么？”或“你现在身体有什么感觉？”）引导用户继续分享。
-    4. 始终围绕用户的核心需求（Needs）和情绪模式（Patterns）进行反馈。
-    5. **响应速度优化**：保持回复简洁而有力，避免冗长的说教。
-    6. 从输入中智能提取更新：如果用户提到了新的感受或事件，请更新到 extracted 字段中。
-    7. 提供 3-4 个能够反映用户可能心态的“快捷回复选项”（chips）。
-    8. 最终输出必须是严格的 JSON 格式。
-    `;
+    请以 JSON 格式输出回复。`;
 
     try {
-      // 切换至 gemini-3-flash-preview 以解决用户反馈的响应过慢问题
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              response: { type: Type.STRING, description: "咨询师生成的回复文本。" },
-              chips: { type: Type.ARRAY, items: { type: Type.STRING }, description: "建议用户的快捷回复按钮。" },
-              updates: {
-                type: Type.OBJECT,
-                properties: {
-                  goal: { type: Type.STRING },
-                  extracted: {
-                    type: Type.OBJECT,
-                    properties: {
-                      eventSummary: { type: Type.STRING },
-                      emotions: { type: Type.ARRAY, items: { type: Type.STRING } },
-                      needs: { type: Type.ARRAY, items: { type: Type.STRING } },
-                      pattern: { type: Type.STRING },
-                    }
-                  }
-                }
-              }
-            },
-            required: ["response", "chips"]
-          }
-        }
+      const response = await client.chat.completions.create({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        response_format: { type: 'json_object' }
       });
 
-      const parsed = JSON.parse(response.text || '{}');
+      const content = response.choices[0].message.content || '{}';
+      const parsed = JSON.parse(content);
       
-      // 处理第 8 步行动计划的默认生成，增强逻辑健壮性
+      // 处理第 8 步行动计划的默认生成
       if (step === 8 && userInput && !parsed.updates?.actionPlan) {
           parsed.updates = parsed.updates || {};
           parsed.updates.actionPlan = {
               task: userInput,
               successCriteria: "尝试用新的方式沟通，并察觉到自己情绪的微妙变化",
-              backupPlan: "如果谈话不顺利，允许自己暂停并撤回安全空间，不做无谓的纠缠",
+              backupPlan: "如果谈话不顺利，允许自己暂停并撤回安全空间",
               completed: false
           };
       }
@@ -102,8 +86,7 @@ export const iptEngine = {
         updates: parsed.updates || {}
       };
     } catch (error) {
-      console.error("Gemini API Error:", error);
-      // 容错处理：确保即使 API 出错，用户也能继续对话
+      console.error("DeepSeek API Error:", error);
       return { 
         response: "抱歉，我刚才正在深思如何更好地支持您。关于您刚才分享的，您觉得最让您触动的是哪一部分？", 
         chips: ["我当下的情绪", "我想改变的沟通方式", "我的核心需求"] 
