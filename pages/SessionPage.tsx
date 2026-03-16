@@ -179,8 +179,8 @@ const SessionPage: React.FC<SessionPageProps> = ({ session, updateSession, onSho
                    <p className="text-xs font-bold text-teal-700 uppercase tracking-widest">Diagnostic loop completed</p>
                 </div>
                 <div className="flex gap-3">
-                   <button onClick={() => onNavigate('coach')} className="px-4 py-1.5 bg-white border border-teal-200 rounded-lg text-[10px] font-bold text-teal-600 hover:bg-teal-50 transition-all uppercase tracking-widest">Review Scripts</button>
-                   <button onClick={() => onNavigate('action')} className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-[10px] font-bold hover:bg-teal-700 transition-all shadow-md shadow-teal-100 uppercase tracking-widest">Action Plan</button>
+                   <button onClick={() => onNavigate('coach')} className="px-4 py-1.5 bg-white border border-teal-200 rounded-lg text-[10px] font-bold text-teal-600 hover:bg-teal-50 transition-all uppercase tracking-widest">查看话术</button>
+                   <button onClick={() => onNavigate('action')} className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-[10px] font-bold hover:bg-teal-700 transition-all shadow-md shadow-teal-100 uppercase tracking-widest">行动计划</button>
                 </div>
              </div>
            )}
