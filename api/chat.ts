@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const client = new OpenAI({
       apiKey,
       baseURL: "https://api.deepseek.com",
-      timeout: 20000,
+      timeout: 50000,
     });
 
     const response = await client.chat.completions.create({
@@ -45,10 +45,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(200).json(parsed);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Error:", error);
     return res.status(500).json({
-      error: error?.message || "Internal Server Error"
+      error: error instanceof Error ? error.message : "Internal Server Error"
     });
   }
 }

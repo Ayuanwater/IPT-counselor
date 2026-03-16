@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AppView } from '../types';
-import { Home, MessageSquare, ShieldCheck, ClipboardList, History, Search, Bell, Settings } from 'lucide-react';
+import { Home, MessageSquare, ShieldCheck, ClipboardList, History, Search, Bell } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -34,7 +34,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, title
         <div className="mt-auto p-8 pt-0 space-y-1">
           <div className="h-px bg-slate-100 mb-6" />
           <SidebarItem icon={<History size={18}/>} label="历史档案" active={activeView === 'history'} onClick={() => onNavigate('history')} />
-          <SidebarItem icon={<Settings size={18}/>} label="偏好设置" active={false} onClick={() => {}} />
         </div>
       </aside>
 

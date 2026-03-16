@@ -38,7 +38,26 @@ export const iptEngine = {
     5. **响应速度优化**：保持回复简洁而有力。
     6. 从输入中智能提取更新：如果用户提到了新的感受或事件，请更新到 extracted 字段中。
     7. 提供 3-4 个能够反映用户可能心态的“快捷回复选项”（chips）。
-    8. **最终输出必须是严格的 JSON 格式**，包含 response, chips, updates 字段。
+    8. **最终输出必须是严格的 JSON 格式**，必须完全符合以下结构：
+    {
+      "response": "你的回复文本",
+      "chips": ["选项1", "选项2", "选项3"],
+      "updates": {
+        "extracted": {
+          "eventSummary": "事件的简短总结",
+          "emotions": ["情绪1", "情绪2"],
+          "needs": ["需求1", "需求2"],
+          "pattern": "识别出的互动模式"
+        },
+        "actionPlan": {
+          "task": "具体的行动任务（特别是在第8步时生成）",
+          "successCriteria": "成功的标准",
+          "backupPlan": "备选方案",
+          "completed": false
+        }
+      }
+    }
+    注意：updates 字段中的内容应根据用户的最新输入进行更新，如果没有新信息可以省略相应字段。
     `;
 
     const userPrompt = `对话历史摘要:

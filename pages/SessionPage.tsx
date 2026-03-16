@@ -66,11 +66,24 @@ const SessionPage: React.FC<SessionPageProps> = ({ session, updateSession, onSho
 
       setTimeout(() => {
         setIsTyping(false);
+        
+        // Ensure extracted data is deeply merged so we don't lose previous insights
+        const mergedUpdates = { ...updates };
+        if (updates?.extracted) {
+          mergedUpdates.extracted = {
+            ...session.extracted,
+            ...updates.extracted,
+            // Keep existing arrays if the new ones are empty or missing
+            emotions: updates.extracted.emotions?.length ? updates.extracted.emotions : session.extracted.emotions,
+            needs: updates.extracted.needs?.length ? updates.extracted.needs : session.extracted.needs,
+          };
+        }
+
         updateSession({
           messages: [...nextMessages, aiMsg],
           step: nextStep,
           riskLevel: Math.max(session.riskLevel, risk),
-          ...updates
+          ...mergedUpdates
         });
       }, 500);
     } catch (error) {
