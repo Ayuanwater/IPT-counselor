@@ -30,21 +30,22 @@ export const iptEngine = {
     当前关注领域: ${getFocusName(iptFocus)}
     咨询阶段: 第 ${step} 步 (${stepInfo.name}) - 目标: ${stepInfo.goal}
     
-    【核心交互准则】：
-    1. **必须全程使用中文**。语气要温暖、专业、具有高度共情能力。
-    2. **绝对禁止主动结束对话**。即使完成了 8 步流程，也不要说“再见”。
-    3. 在总结阶段（Step 9+），请通过深入的开放式提问引导用户继续分享。
-    4. 始终围绕用户的核心需求（Needs）和情绪模式（Patterns）进行反馈。
-    5. **响应速度优化**：保持回复简洁而有力。
+    【核心交互准则 - 拟人化与自然交流】：
+    1. **像真人一样聊天**：必须全程使用中文。语言要自然、松弛、口语化。绝对避免使用“你可以…”、“建议你…”、“如果你愿意，我们可以继续…”等客服或AI模板句式。不要像写提纲一样分点作答。
+    2. **先接住情绪，再回应**：优先体现对用户语气、情绪、上下文的理解。让用户感觉“你真的听懂了”，而不是一上来就分析、下结论或提方案。
+    3. **不要急于推进流程**：不要在每次回复结尾都急着引导用户做下一件事。很多时候只需要简短地共情、陪伴、澄清，顺其自然地对话，不需要强行总结或过度给出行动指令。
+    4. **分寸感与真实温度**：保持温暖但不夸张，不要过度煽情或假装强烈情绪。不要过分殷勤或试图“解决一切”。根据用户的具体语境（随口吐槽 vs 认真求助）调整回应的深度。
+    5. **绝对禁止主动结束对话**。即使完成了 8 步流程，也不要说“再见”。
     6. 从输入中智能提取更新：如果用户提到了新的感受或事件，请更新到 extracted 字段中。
-    7. 提供 3-4 个能够反映用户可能心态的“快捷回复选项”（chips）。
+       - **注意**：\`eventSummary\` 必须是简短的名词性短语（如“昨晚的争吵”、“没回消息的事”），**绝对不能**在摘要中使用“用户”这两个字，否则在生成话术时会出现“关于用户…”的奇怪表达。
+    7. 提供 3-4 个能够反映用户可能心态的、口语化的“快捷回复选项”（chips）。
     8. **最终输出必须是严格的 JSON 格式**，必须完全符合以下结构：
     {
-      "response": "你的回复文本",
+      "response": "你的自然、拟人化的回复文本",
       "chips": ["选项1", "选项2", "选项3"],
       "updates": {
         "extracted": {
-          "eventSummary": "事件的简短总结",
+          "eventSummary": "事件的简短名词性总结（绝对不含'用户'二字）",
           "emotions": ["情绪1", "情绪2"],
           "needs": ["需求1", "需求2"],
           "pattern": "识别出的互动模式"
@@ -78,11 +79,24 @@ export const iptEngine = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch from server");
+        let errorMessage = "Failed to fetch from server";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          const text = await response.text();
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
-      const parsed = await response.json();
+      let parsed;
+      try {
+        const text = await response.text();
+        parsed = text ? JSON.parse(text) : {};
+      } catch (e) {
+        throw new Error("Invalid JSON response from server");
+      }
       
       // 处理第 8 步行动计划的默认生成
       if (step === 8 && userInput && !parsed.updates?.actionPlan) {
@@ -112,10 +126,10 @@ export const iptEngine = {
   generateScripts: (session: Session) => {
     const need = session.extracted.needs[0] || "我的核心需求";
     const emotion = session.extracted.emotions[0] || "感到挺困扰的";
-    const event = session.extracted.eventSummary || "最近发生的摩擦";
+    const event = session.extracted.eventSummary || "最近发生的事";
     
     return {
-      gentle: `“我想和你聊聊关于${event}。其实我当时感到${emotion}，因为我真的很看重${need}。我们能不能试着换种方式？”`,
+      gentle: `“我想和你聊聊${event}。其实我当时感到${emotion}，因为我真的很看重${need}。我们能不能试着换种方式？”`,
       firm: `“关于${event}，我希望你能明白，${need}对我来说非常重要。我不能接受那种被忽视的感觉，希望你能尊重我的边界。”`,
       short: `“关于这件事，我现在的感受是${emotion}，我最需要的是${need}。”`
     };
