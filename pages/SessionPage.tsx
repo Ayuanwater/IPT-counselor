@@ -31,8 +31,7 @@ const SessionPage: React.FC<SessionPageProps> = ({ session, updateSession, onSho
   const handleSend = React.useCallback(async (text: string) => {
     if (!text.trim()) return;
 
-    if (text === "查看话术建议" || text === "再给我些话术启发") { onNavigate('coach'); return; }
-    if (text === "查看行动计划") { onNavigate('action'); return; }
+    if (text === "查看分析报告") { onNavigate('report'); return; }
     if (text === "重新开始咨询" || text === "结束并重新开始") { onRestart(); return; }
     if (text === "结束咨询") { onNavigate('home'); return; }
 
@@ -113,9 +112,17 @@ const SessionPage: React.FC<SessionPageProps> = ({ session, updateSession, onSho
                 {i < 7 && <div className={`w-4 h-0.5 rounded-full ${session.step > i + 1 ? 'bg-indigo-200' : 'bg-slate-50'}`} />}
               </div>
             ))}
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${session.step >= 9 ? 'bg-teal-50 text-teal-600' : 'bg-slate-50 text-slate-400'}`}>
-              <Activity size={10}/> Report
-            </div>
+            <button 
+              onClick={() => session.step >= 9 ? onNavigate('report') : undefined}
+              disabled={session.step < 9}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                session.step >= 9 
+                ? 'bg-teal-500 text-white shadow-md shadow-teal-200 hover:bg-teal-600 active:scale-95 cursor-pointer' 
+                : 'bg-slate-50 text-slate-400 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <Activity size={12}/> {session.step >= 9 ? '查看分析报告' : 'Report'}
+            </button>
           </div>
           
           <div className="hidden lg:flex flex-col items-end">
@@ -137,7 +144,7 @@ const SessionPage: React.FC<SessionPageProps> = ({ session, updateSession, onSho
                   }`}>
                     {m.content}
                   </div>
-                  {m.chips && m.role === 'ai' && (
+                  {m.chips && m.chips.length > 0 && m.role === 'ai' && (
                     <div className="flex flex-wrap gap-2 mt-2">
                       {m.chips.map((chip, idx) => (
                         <button
@@ -170,42 +177,39 @@ const SessionPage: React.FC<SessionPageProps> = ({ session, updateSession, onSho
 
         {/* Console / Input area */}
         <div className="p-8 bg-white border-t border-slate-100">
-           {session.step === 9 && (
-             <div className="max-w-4xl mx-auto mb-6 p-4 bg-teal-50/50 border border-teal-100 rounded-2xl flex items-center justify-between animate-in zoom-in-95 duration-500">
-                <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-600">
-                      <CheckCircle size={18}/>
-                   </div>
-                   <p className="text-xs font-bold text-teal-700 uppercase tracking-widest">Diagnostic loop completed</p>
-                </div>
-                <div className="flex gap-3">
-                   <button onClick={() => onNavigate('coach')} className="px-4 py-1.5 bg-white border border-teal-200 rounded-lg text-[10px] font-bold text-teal-600 hover:bg-teal-50 transition-all uppercase tracking-widest">查看话术</button>
-                   <button onClick={() => onNavigate('action')} className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-[10px] font-bold hover:bg-teal-700 transition-all shadow-md shadow-teal-100 uppercase tracking-widest">行动计划</button>
-                </div>
-             </div>
-           )}
-
-           <div className="max-w-4xl mx-auto relative">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={session.step >= 9 ? "临床分析进行中... 键入以进行下一步探索" : "描述当前的情境或感受..."}
-                rows={1}
-                className="w-full bg-slate-50 border border-slate-200 rounded-[24px] py-5 px-8 pr-20 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:bg-white focus:border-indigo-200 transition-all resize-none shadow-inner"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend(input);
-                  }
-                }}
-              />
-              <button
-                onClick={() => handleSend(input)}
-                disabled={!input.trim() || isTyping}
-                className="absolute right-3 top-3 p-3.5 bg-slate-900 text-white rounded-2xl disabled:opacity-20 hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center justify-center"
-              >
-                <Send size={18} />
-              </button>
+           <div className="max-w-4xl mx-auto flex gap-3">
+              <div className="flex-1 relative">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={session.step >= 9 ? "临床分析进行中... 键入以进行下一步探索" : "描述当前的情境或感受..."}
+                  rows={1}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-[24px] py-5 px-8 pr-20 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:bg-white focus:border-indigo-200 transition-all resize-none shadow-inner"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend(input);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => handleSend(input)}
+                  disabled={!input.trim() || isTyping}
+                  className="absolute right-3 top-3 p-3.5 bg-slate-900 text-white rounded-2xl disabled:opacity-20 hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center justify-center"
+                >
+                  <Send size={18} />
+                </button>
+              </div>
+              {session.step >= 9 && (
+                <button 
+                  onClick={() => onNavigate('report')} 
+                  className="px-6 bg-teal-600 text-white rounded-[24px] text-sm font-bold hover:bg-teal-700 transition-all shadow-md shadow-teal-200 active:scale-95 flex items-center justify-center gap-2 shrink-0 animate-in zoom-in-95 duration-500"
+                >
+                  <Activity size={18}/>
+                  <span className="hidden sm:inline">分析报告</span>
+                  <span className="sm:hidden">报告</span>
+                </button>
+              )}
            </div>
            
            <div className="max-w-4xl mx-auto mt-4 flex items-center justify-between px-4">

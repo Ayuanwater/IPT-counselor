@@ -22,6 +22,12 @@ export interface Message {
   chips?: string[];
 }
 
+export interface Report {
+  expressionAdvice: string;
+  actionAdvice: string;
+  conceptualSummary: string;
+}
+
 export interface Session {
   id: string;
   createdAt: number;
@@ -38,18 +44,8 @@ export interface Session {
     needs: string[];
     pattern?: string;
   };
-  coachScripts?: {
-    gentle: string;
-    firm: string;
-    short: string;
-  };
-  actionPlan?: {
-    task: string;
-    successCriteria: string;
-    backupPlan: string;
-    completed: boolean;
-  };
+  report?: Report;
   reflection?: string;
 }
 
-export type AppView = 'home' | 'session' | 'coach' | 'action' | 'history';
+export type AppView = 'home' | 'session' | 'report' | 'history';

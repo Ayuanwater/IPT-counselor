@@ -5,8 +5,7 @@ import { storage } from './lib/storage';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import SessionPage from './pages/SessionPage';
-import CoachPage from './pages/CoachPage';
-import ActionPage from './pages/ActionPage';
+import ReportPage from './pages/ReportPage';
 import HistoryPage from './pages/HistoryPage';
 import SafetySheet from './components/SafetySheet';
 
@@ -19,7 +18,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '') as AppView;
-      if (['home', 'session', 'coach', 'action', 'history'].includes(hash)) {
+      if (['home', 'session', 'report', 'history'].includes(hash)) {
         setActiveView(hash);
       }
     };
@@ -89,8 +88,7 @@ const App: React.FC = () => {
     switch (activeView) {
       case 'home': return '选择困扰领域';
       case 'session': return '深度咨询中';
-      case 'coach': return '话术实验室';
-      case 'action': return '行动清单';
+      case 'report': return '分析报告';
       case 'history': return '咨询档案';
       default: return 'IPT AI';
     }
@@ -114,12 +112,8 @@ const App: React.FC = () => {
         />
       )}
 
-      {activeView === 'coach' && currentSession && (
-        <CoachPage session={currentSession} />
-      )}
-
-      {activeView === 'action' && currentSession && (
-        <ActionPage session={currentSession} updateSession={updateSession} />
+      {activeView === 'report' && currentSession && (
+        <ReportPage session={currentSession} onNavigate={navigateTo} />
       )}
 
       {activeView === 'history' && (
@@ -130,7 +124,7 @@ const App: React.FC = () => {
       )}
 
       {/* Placeholder for no active session */}
-      {['session', 'coach', 'action'].includes(activeView) && !currentSession && (
+      {['session', 'report'].includes(activeView) && !currentSession && (
         <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-4">
           <div className="p-4 bg-slate-50 rounded-full text-slate-300">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

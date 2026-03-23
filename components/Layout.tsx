@@ -26,8 +26,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, title
           <nav className="space-y-1">
             <SidebarItem icon={<Home size={18}/>} label="概览首页" active={activeView === 'home'} onClick={() => onNavigate('home')} />
             <SidebarItem icon={<MessageSquare size={18}/>} label="实时咨询" active={activeView === 'session'} onClick={() => onNavigate('session')} />
-            <SidebarItem icon={<ShieldCheck size={18}/>} label="表达教练" active={activeView === 'coach'} onClick={() => onNavigate('coach')} />
-            <SidebarItem icon={<ClipboardList size={18}/>} label="行动干预" active={activeView === 'action'} onClick={() => onNavigate('action')} />
           </nav>
         </div>
 
@@ -68,8 +66,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, title
         <nav className="md:hidden border-t border-slate-200/60 px-6 py-3 bg-white/90 backdrop-blur-xl flex justify-between items-center z-20">
           <MobileNavItem icon={<Home size={22}/>} active={activeView === 'home'} onClick={() => onNavigate('home')} />
           <MobileNavItem icon={<MessageSquare size={22}/>} active={activeView === 'session'} onClick={() => onNavigate('session')} />
-          <MobileNavItem icon={<ShieldCheck size={22}/>} active={activeView === 'coach'} onClick={() => onNavigate('coach')} />
-          <MobileNavItem icon={<ClipboardList size={22}/>} active={activeView === 'action'} onClick={() => onNavigate('action')} />
           <MobileNavItem icon={<History size={22}/>} active={activeView === 'history'} onClick={() => onNavigate('history')} />
         </nav>
       </div>
